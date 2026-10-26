@@ -21,7 +21,12 @@ public class TestDemo {
             WebElement buttonLogin = driver.findElement(By.id("login-button"));
             buttonLogin.click();
         } finally {
-            driver.quit();
-        }
+    try {
+        Thread.sleep(5000);
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+    }
+    driver.quit();
+}
     }
 }
