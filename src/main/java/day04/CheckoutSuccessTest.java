@@ -33,7 +33,8 @@ public class CheckoutSuccessTest {
             By.className("inventory_item_name");
     private static final By PRODUCT_PRICE =
             By.className("inventory_item_price");
-    private static final By PRODUCT_BUTTON = By.tagName("button");
+    private static final By PRODUCT_BUTTON =
+            By.cssSelector("button.btn_inventory");
     private static final By CART_BADGE = By.className("shopping_cart_badge");
     private static final By CART_LINK =
             By.cssSelector("a.shopping_cart_link");
@@ -49,6 +50,8 @@ public class CheckoutSuccessTest {
     private static final By LAST_NAME = By.id("last-name");
     private static final By POSTAL_CODE = By.id("postal-code");
     private static final By CONTINUE_BUTTON = By.id("continue");
+    private static final By CHECKOUT_ERROR =
+            By.cssSelector("[data-test='error']");
     private static final By SUBTOTAL =
             By.className("summary_subtotal_label");
     private static final By TAX = By.className("summary_tax_label");
@@ -157,17 +160,23 @@ public class CheckoutSuccessTest {
                 WebElement addButton = productCard.findElement(
                         PRODUCT_BUTTON
                 );
-                String addButtonId = addButton.getAttribute("id");
-                String removeButtonId = addButtonId.replace(
-                        "add-to-cart-",
-                        "remove-"
-                );
                 addButton.click();
 
-                wait.until(ExpectedConditions.textToBe(
-                        By.id(removeButtonId),
-                        "Remove"
-                ));
+                // Tìm lại thẻ sản phẩm mỗi lần kiểm tra để không phụ thuộc ID nút.
+                wait.until(d -> {
+                    List<WebElement> currentCards =
+                            d.findElements(PRODUCT_CARDS);
+
+                    if (currentCards.size() <= productIndex) {
+                        return false;
+                    }
+
+                    WebElement currentButton = currentCards
+                            .get(productIndex)
+                            .findElement(PRODUCT_BUTTON);
+
+                    return currentButton.getText().trim().equals("Remove");
+                });
 
                 String expectedBadgeCount =
                         String.valueOf(productIndex + 1);
@@ -249,17 +258,28 @@ public class CheckoutSuccessTest {
                     CHECKOUT_BUTTON
             )).click();
 
-            wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    FIRST_NAME
-            )).sendKeys("Do");
-
-            wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    LAST_NAME
-            )).sendKeys("Hieu");
-
-            wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    POSTAL_CODE
-            )).sendKeys("700000");
+            // TC02-TC04: Bắt đầu với form trống, điền từng trường sau khi kiểm tra lỗi.
+            verifyRequiredFieldValidation(
+                    wait,
+                    FIRST_NAME,
+                    "Do",
+                    "TC02 - Thiếu First Name",
+                    "Error: First Name is required"
+            );
+            verifyRequiredFieldValidation(
+                    wait,
+                    LAST_NAME,
+                    "Hieu",
+                    "TC03 - Thiếu Last Name",
+                    "Error: Last Name is required"
+            );
+            verifyRequiredFieldValidation(
+                    wait,
+                    POSTAL_CODE,
+                    "700000",
+                    "TC04 - Thiếu Zip Code",
+                    "Error: Postal Code is required"
+            );
 
             // Bước 6: Kiểm tra Checkout: Overview.
             wait.until(ExpectedConditions.elementToBeClickable(
@@ -573,6 +593,40 @@ public class CheckoutSuccessTest {
                     actualPrice
             );
         }
+    }
+
+    private static void verifyRequiredFieldValidation(
+            WebDriverWait wait,
+            By fieldLocator,
+            String validValue,
+            String testName,
+            String expectedError
+    ) {
+        wait.until(ExpectedConditions.elementToBeClickable(
+                CONTINUE_BUTTON
+        )).click();
+
+        wait.until(ExpectedConditions.textToBe(
+                CHECKOUT_ERROR,
+                expectedError
+        ));
+
+        String actualError = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        CHECKOUT_ERROR
+                )
+        ).getText();
+
+        check(
+                testName,
+                actualError.equals(expectedError),
+                expectedError,
+                actualError
+        );
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                fieldLocator
+        )).sendKeys(validValue);
     }
 
     private static BigDecimal readMoney(String text) {
