@@ -22,6 +22,43 @@ public class CheckoutSuccessTest {
     private static final String URL = "https://www.saucedemo.com/";
     private static final BigDecimal TAX_RATE = new BigDecimal("0.08");
 
+    private static final By USERNAME = By.id("user-name");
+    private static final By PASSWORD = By.id("password");
+    private static final By LOGIN_BUTTON = By.id("login-button");
+    private static final By INVENTORY_LIST = By.className("inventory_list");
+    private static final By SORT_DROPDOWN =
+            By.className("product_sort_container");
+    private static final By PRODUCT_CARDS = By.className("inventory_item");
+    private static final By PRODUCT_NAME =
+            By.className("inventory_item_name");
+    private static final By PRODUCT_PRICE =
+            By.className("inventory_item_price");
+    private static final By PRODUCT_BUTTON = By.tagName("button");
+    private static final By CART_BADGE = By.className("shopping_cart_badge");
+    private static final By CART_LINK =
+            By.cssSelector("a.shopping_cart_link");
+    private static final By PAGE_TITLE = By.cssSelector(
+            ".header_secondary_container .title"
+    );
+    private static final By CART_ITEMS = By.className("cart_item");
+    private static final By CART_QUANTITY = By.className("cart_quantity");
+    private static final By CART_ITEM_BUTTONS =
+            By.cssSelector(".cart_item button");
+    private static final By CHECKOUT_BUTTON = By.id("checkout");
+    private static final By FIRST_NAME = By.id("first-name");
+    private static final By LAST_NAME = By.id("last-name");
+    private static final By POSTAL_CODE = By.id("postal-code");
+    private static final By CONTINUE_BUTTON = By.id("continue");
+    private static final By SUBTOTAL =
+            By.className("summary_subtotal_label");
+    private static final By TAX = By.className("summary_tax_label");
+    private static final By TOTAL = By.className("summary_total_label");
+    private static final By FINISH_BUTTON = By.id("finish");
+    private static final By COMPLETE_HEADER =
+            By.className("complete-header");
+    private static final By COMPLETE_TEXT = By.className("complete-text");
+    private static final By BACK_TO_PRODUCTS = By.id("back-to-products");
+
     private static int passedChecks = 0;
     private static int failedChecks = 0;
 
@@ -40,19 +77,19 @@ public class CheckoutSuccessTest {
             driver.get(URL);
 
             wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.id("user-name")
+                    USERNAME
             )).sendKeys("standard_user");
 
             wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.id("password")
+                    PASSWORD
             )).sendKeys("secret_sauce");
 
             wait.until(ExpectedConditions.elementToBeClickable(
-                    By.id("login-button")
+                    LOGIN_BUTTON
             )).click();
 
             wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.className("inventory_list")
+                    INVENTORY_LIST
             ));
 
             check(
@@ -63,17 +100,15 @@ public class CheckoutSuccessTest {
             );
 
             // Bước 2: Sắp xếp giá từ thấp đến cao.
-            By sortDropdown = By.className("product_sort_container");
-
             Select sortSelect = new Select(wait.until(
                     ExpectedConditions.visibilityOfElementLocated(
-                            sortDropdown
+                            SORT_DROPDOWN
                     )
             ));
             sortSelect.selectByValue("lohi");
 
             String selectedSort = new Select(
-                    driver.findElement(sortDropdown)
+                    driver.findElement(SORT_DROPDOWN)
             ).getFirstSelectedOption().getText();
 
             check(
@@ -97,9 +132,7 @@ public class CheckoutSuccessTest {
                 int productIndex = i;
 
                 WebElement productCard = wait.until(d -> {
-                    List<WebElement> cards = d.findElements(
-                            By.className("inventory_item")
-                    );
+                    List<WebElement> cards = d.findElements(PRODUCT_CARDS);
 
                     if (cards.size() <= productIndex) {
                         return null;
@@ -110,11 +143,11 @@ public class CheckoutSuccessTest {
                 });
 
                 String productName = productCard.findElement(
-                        By.className("inventory_item_name")
+                        PRODUCT_NAME
                 ).getText();
 
                 String productPrice = productCard.findElement(
-                        By.className("inventory_item_price")
+                        PRODUCT_PRICE
                 ).getText();
 
                 expectedProducts.add(
@@ -122,29 +155,25 @@ public class CheckoutSuccessTest {
                 );
 
                 WebElement addButton = productCard.findElement(
-                        By.tagName("button")
+                        PRODUCT_BUTTON
                 );
-
                 String addButtonId = addButton.getAttribute("id");
                 String removeButtonId = addButtonId.replace(
                         "add-to-cart-",
                         "remove-"
                 );
-
                 addButton.click();
 
-                // Chờ đúng nút của sản phẩm này đổi thành Remove.
                 wait.until(ExpectedConditions.textToBe(
                         By.id(removeButtonId),
                         "Remove"
                 ));
 
-                // Chờ badge cập nhật sau từng lần thêm.
                 String expectedBadgeCount =
                         String.valueOf(productIndex + 1);
 
                 wait.until(ExpectedConditions.textToBePresentInElementLocated(
-                        By.className("shopping_cart_badge"),
+                        CART_BADGE,
                         expectedBadgeCount
                 ));
 
@@ -154,7 +183,7 @@ public class CheckoutSuccessTest {
             }
 
             String cartBadge = driver.findElement(
-                    By.className("shopping_cart_badge")
+                    CART_BADGE
             ).getText();
 
             check(
@@ -165,16 +194,9 @@ public class CheckoutSuccessTest {
             );
 
             // Bước 4: Mở và kiểm tra Your Cart.
-            By pageTitle = By.cssSelector(
-                    ".header_secondary_container .title"
-            );
-
-            By cartLinkLocator =
-                    By.cssSelector("a.shopping_cart_link");
-
             WebElement cartLink = wait.until(
                     ExpectedConditions.elementToBeClickable(
-                            cartLinkLocator
+                            CART_LINK
                     )
             );
 
@@ -182,11 +204,11 @@ public class CheckoutSuccessTest {
 
             wait.until(ExpectedConditions.urlContains("cart.html"));
             wait.until(ExpectedConditions.textToBe(
-                    pageTitle,
+                    PAGE_TITLE,
                     "Your Cart"
             ));
 
-            String cartTitle = driver.findElement(pageTitle).getText();
+            String cartTitle = driver.findElement(PAGE_TITLE).getText();
 
             check(
                     "Tiêu đề Your Cart",
@@ -203,7 +225,7 @@ public class CheckoutSuccessTest {
             );
 
             List<WebElement> cartButtons = driver.findElements(
-                    By.cssSelector(".cart_item button")
+                    CART_ITEM_BUTTONS
             );
 
             int visibleRemoveButtons = 0;
@@ -224,32 +246,32 @@ public class CheckoutSuccessTest {
 
             // Bước 5: Nhập thông tin checkout.
             wait.until(ExpectedConditions.elementToBeClickable(
-                    By.id("checkout")
+                    CHECKOUT_BUTTON
             )).click();
 
             wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.id("first-name")
+                    FIRST_NAME
             )).sendKeys("Do");
 
             wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.id("last-name")
+                    LAST_NAME
             )).sendKeys("Hieu");
 
             wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.id("postal-code")
+                    POSTAL_CODE
             )).sendKeys("700000");
 
             // Bước 6: Kiểm tra Checkout: Overview.
             wait.until(ExpectedConditions.elementToBeClickable(
-                    By.id("continue")
+                    CONTINUE_BUTTON
             )).click();
 
             wait.until(ExpectedConditions.textToBe(
-                    pageTitle,
+                    PAGE_TITLE,
                     "Checkout: Overview"
             ));
 
-            String overviewTitle = driver.findElement(pageTitle).getText();
+            String overviewTitle = driver.findElement(PAGE_TITLE).getText();
 
             check(
                     "Tiêu đề Checkout: Overview",
@@ -298,7 +320,7 @@ public class CheckoutSuccessTest {
 
             String itemTotalText = wait.until(
                     ExpectedConditions.visibilityOfElementLocated(
-                            By.className("summary_subtotal_label")
+                            SUBTOTAL
                     )
             ).getText();
 
@@ -313,7 +335,7 @@ public class CheckoutSuccessTest {
 
             String taxText = wait.until(
                     ExpectedConditions.visibilityOfElementLocated(
-                            By.className("summary_tax_label")
+                            TAX
                     )
             ).getText();
 
@@ -332,7 +354,7 @@ public class CheckoutSuccessTest {
 
             String totalText = wait.until(
                     ExpectedConditions.visibilityOfElementLocated(
-                            By.className("summary_total_label")
+                            TOTAL
                     )
             ).getText();
 
@@ -359,7 +381,7 @@ public class CheckoutSuccessTest {
 
             WebElement finishButton = wait.until(
                     ExpectedConditions.elementToBeClickable(
-                            By.id("finish")
+                            FINISH_BUTTON
                     )
             );
 
@@ -374,11 +396,11 @@ public class CheckoutSuccessTest {
 
             // Bước 7: Kiểm tra trang hoàn tất đơn hàng.
             wait.until(ExpectedConditions.textToBe(
-                    pageTitle,
+                    PAGE_TITLE,
                     "Checkout: Complete!"
             ));
 
-            String completeTitle = driver.findElement(pageTitle).getText();
+            String completeTitle = driver.findElement(PAGE_TITLE).getText();
 
             check(
                     "Tiêu đề Checkout: Complete!",
@@ -389,7 +411,7 @@ public class CheckoutSuccessTest {
 
             String thankYouMessage = wait.until(
                     ExpectedConditions.visibilityOfElementLocated(
-                            By.className("complete-header")
+                            COMPLETE_HEADER
                     )
             ).getText();
 
@@ -406,7 +428,7 @@ public class CheckoutSuccessTest {
 
             String dispatchMessage = wait.until(
                     ExpectedConditions.visibilityOfElementLocated(
-                            By.className("complete-text")
+                            COMPLETE_TEXT
                     )
             ).getText();
 
@@ -419,7 +441,7 @@ public class CheckoutSuccessTest {
 
             WebElement backHomeButton = wait.until(
                     ExpectedConditions.visibilityOfElementLocated(
-                            By.id("back-to-products")
+                            BACK_TO_PRODUCTS
                     )
             );
 
@@ -448,9 +470,7 @@ public class CheckoutSuccessTest {
     }
 
     private static boolean arePricesSortedLowToHigh(WebDriver driver) {
-        List<WebElement> productCards = driver.findElements(
-                By.className("inventory_item")
-        );
+        List<WebElement> productCards = driver.findElements(PRODUCT_CARDS);
 
         if (productCards.isEmpty()) {
             return false;
@@ -460,7 +480,7 @@ public class CheckoutSuccessTest {
 
         for (WebElement card : productCards) {
             String priceText = card.findElement(
-                    By.className("inventory_item_price")
+                    PRODUCT_PRICE
             ).getText();
 
             BigDecimal currentPrice = readMoney(priceText);
@@ -483,12 +503,10 @@ public class CheckoutSuccessTest {
             String pageName
     ) {
         wait.until(d -> d.findElements(
-                By.className("cart_item")
+                CART_ITEMS
         ).size() == expectedProducts.size());
 
-        List<WebElement> cartItems = driver.findElements(
-                By.className("cart_item")
-        );
+        List<WebElement> cartItems = driver.findElements(CART_ITEMS);
 
         check(
                 pageName + " có đúng 2 sản phẩm",
@@ -502,7 +520,7 @@ public class CheckoutSuccessTest {
 
             for (WebElement cartItem : cartItems) {
                 String actualName = cartItem.findElement(
-                        By.className("inventory_item_name")
+                        PRODUCT_NAME
                 ).getText();
 
                 if (actualName.equals(expectedProduct.getName())) {
@@ -523,15 +541,15 @@ public class CheckoutSuccessTest {
             }
 
             String actualName = matchingItem.findElement(
-                    By.className("inventory_item_name")
+                    PRODUCT_NAME
             ).getText();
 
             String actualQuantity = matchingItem.findElement(
-                    By.className("cart_quantity")
+                    CART_QUANTITY
             ).getText();
 
             String actualPrice = matchingItem.findElement(
-                    By.className("inventory_item_price")
+                    PRODUCT_PRICE
             ).getText();
 
             check(
