@@ -6,6 +6,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -13,7 +14,6 @@ import org.testng.annotations.Test;
 
 import UI.LoginPageUI;
 import action.LoginPage;
-import reporting.TestLog;
 
 public class LoginTestVV {
     private static final String BASE_URL = "https://www.saucedemo.com/";
@@ -42,10 +42,9 @@ public class LoginTestVV {
 
     @Test(description = "TC01 - Happy case: đăng nhập đúng")
     public void testLoginSuccessfully() {
-        TestLog.assertEquals(driver.getTitle(), PAGE_TITLE, "Tiêu đề trang đăng nhập");
-        TestLog.assertEquals(driver.getCurrentUrl(), BASE_URL, "URL trang đăng nhập");
+        Assert.assertEquals(driver.getTitle(), PAGE_TITLE, "Page title is incorrect!");
+        Assert.assertEquals(driver.getCurrentUrl(), BASE_URL, "Page URL is incorrect!");
 
-        TestLog.step("Nhập tài khoản hợp lệ và bấm Login");
         loginPage.login("standard_user", "secret_sauce");
 
         wait.until(ExpectedConditions.urlToBe(INVENTORY_URL));
@@ -53,16 +52,16 @@ public class LoginTestVV {
         wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
                 LoginPageUI.INVENTORY_ITEM, 0));
 
-        TestLog.assertEquals(driver.getCurrentUrl(), INVENTORY_URL,
-                "URL sau khi đăng nhập thành công");
-        TestLog.assertTrue(loginPage.isLogoDisplayed(), "Logo trang sản phẩm hiển thị");
-        TestLog.assertGreaterThan(loginPage.getInventoryItemCount(), 0,
-                "Danh sách có sản phẩm");
+        Assert.assertEquals(driver.getCurrentUrl(), INVENTORY_URL,
+                "Login failed - Inventory page not loaded!");
+        Assert.assertTrue(loginPage.isLogoDisplayed(),
+                "App logo is not displayed on inventory page!");
+        Assert.assertTrue(loginPage.getInventoryItemCount() > 0,
+                "No products displayed on inventory page!");
     }
 
     @Test(description = "TC02 - Unhappy case: sai mật khẩu")
     public void testLoginWithWrongPassword() {
-        TestLog.step("Nhập username hợp lệ, mật khẩu sai và bấm Login");
         loginPage.login("standard_user", "wrong_password");
 
         assertLoginError(
@@ -71,7 +70,6 @@ public class LoginTestVV {
 
     @Test(description = "TC03 - Unhappy case: bỏ trống username")
     public void testLoginWithEmptyUsername() {
-        TestLog.step("Bỏ trống username, nhập mật khẩu và bấm Login");
         loginPage.login("", "secret_sauce");
 
         assertLoginError("Epic sadface: Username is required");
@@ -79,7 +77,6 @@ public class LoginTestVV {
 
     @Test(description = "TC04 - Unhappy case: bỏ trống password")
     public void testLoginWithEmptyPassword() {
-        TestLog.step("Nhập username, bỏ trống mật khẩu và bấm Login");
         loginPage.login("standard_user", "");
 
         assertLoginError("Epic sadface: Password is required");
@@ -89,11 +86,12 @@ public class LoginTestVV {
     private void assertLoginError(String expectedMessage) {
         wait.until(ExpectedConditions.visibilityOfElementLocated(LoginPageUI.ERROR_MESSAGE));
 
-        TestLog.assertEquals(driver.getCurrentUrl(), BASE_URL,
-                "Vẫn ở trang đăng nhập khi thông tin không hợp lệ");
-        TestLog.assertTrue(loginPage.isErrorMessageDisplayed(), "Thông báo lỗi hiển thị");
-        TestLog.assertEquals(loginPage.getErrorMessage(), expectedMessage,
-                "Nội dung thông báo lỗi");
+        Assert.assertEquals(driver.getCurrentUrl(), BASE_URL,
+                "Should stay on login page when login fails!");
+        Assert.assertTrue(loginPage.isErrorMessageDisplayed(),
+                "Login error message is not displayed!");
+        Assert.assertEquals(loginPage.getErrorMessage(), expectedMessage,
+                "Login error message is incorrect!");
     }
 
     @AfterClass(alwaysRun = true)
