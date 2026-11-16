@@ -158,6 +158,8 @@ public class DetailedTestReport implements ITestListener, IReporter {
     }
 
     private static String title(ITestResult result) {
+        Object customTitle = result.getAttribute("report.title");
+        if (customTitle instanceof String name && !name.isBlank()) return name;
         String description = result.getMethod().getDescription();
         return description == null || description.isBlank()
                 ? result.getMethod().getMethodName() : description;
